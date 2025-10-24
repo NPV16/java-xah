@@ -1,5 +1,6 @@
 package com.github.vevc.config;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 /**
@@ -28,17 +29,26 @@ public class ApplicationYamlVo {
 
     @Data
     public static class AppConfigVo {
-        private String xrayVersion;
-        private String hy2Version;
-        private String argoVersion;
         private String domain;
         private String port;
+        @JsonProperty("xray-version")
+        private String xrayVersion;
+        @JsonProperty("hy2-version")
+        private String hy2Version;
+        @JsonProperty("argo-version")
+        private String argoVersion;
         private String uuid;
+        @JsonProperty("argo-domain")
         private String argoDomain;
+        @JsonProperty("argo-token")
         private String argoToken;
+        @JsonProperty("reality-public-key")
         private String realityPublicKey;
+        @JsonProperty("reality-private-key")
         private String realityPrivateKey;
+        @JsonProperty("reality-short-id")
         private String realityShortId;
+        @JsonProperty("remarks-prefix")
         private String remarksPrefix;
     }
 

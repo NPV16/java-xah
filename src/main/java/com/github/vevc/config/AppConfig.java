@@ -17,11 +17,11 @@ import java.util.UUID;
 @Configuration
 @ConfigurationProperties(prefix = "app")
 public class AppConfig {
+    private String domain;
+    private String port;
     private String xrayVersion;
     private String hy2Version;
     private String argoVersion;
-    private String domain;
-    private String port;
     private String uuid;
     private String argoDomain;
     private String argoToken;
