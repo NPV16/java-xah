@@ -6,17 +6,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.zeroturnaround.exec.ProcessExecutor;
-import org.zeroturnaround.exec.stream.LogOutputStream;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -66,53 +65,60 @@ public class ArgoServiceImpl extends AbstractAppService {
     @Override
     public void startup() throws Exception {
         File appFile = new File(this.getBinaryPath(), APP_NAME);
-        if (StringUtils.isBlank(appConfig.getArgoToken())) {
-            log.info("Starting Argo...");
-            new ProcessExecutor()
-                    .command(appFile.getAbsolutePath(), "tunnel", "--no-autoupdate",
-                            "--edge-ip-version", "auto", "--protocol", "http2", "--url", "http://localhost:8001")
-                    .redirectOutput(new LogOutputStream() {
-                        private boolean matched = false;
-
-                        @Override
-                        protected void processLine(String line) {
-                            if (matched) {
-                                return;
-                            }
-                            Matcher matcher = QUICK_TUNNEL_HOST_PATTERN.matcher(line);
-                            String lastMatch = null;
-                            while (matcher.find()) {
-                                lastMatch = matcher.group();
-                            }
-                            if (lastMatch != null) {
-                                matched = true;
-                                try {
-                                    String argoDomain = new URL(lastMatch).getHost();
-                                    appConfig.setArgoDomain(argoDomain);
-                                    // update application.yml config
-                                    updateSpringConfig();
-                                    log.info("Spring application.yml config updated successfully");
-                                    updateSubFile();
-                                    log.info("✅ Startup completed. You can view node details at: {}", NODE_FILE_PATH);
-                                } catch (Exception e) {
-                                    throw new RuntimeException(e);
-                                }
-                            }
+        Process process;
+        while (true) {
+            if (StringUtils.isBlank(appConfig.getArgoToken())) {
+                log.info("Starting Argo...");
+                ProcessBuilder pb = new ProcessBuilder(appFile.getAbsolutePath(), "tunnel", "--no-autoupdate",
+                        "--edge-ip-version", "auto", "--protocol", "http2", "--url", "http://localhost:8001");
+                pb.redirectErrorStream(true);
+                process = pb.start();
+                AtomicBoolean stopLogging = new AtomicBoolean(false);
+                try (
+                        InputStream is = process.getInputStream();
+                        InputStreamReader isReader = new InputStreamReader(is);
+                        BufferedReader reader = new BufferedReader(isReader)
+                ) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        if (stopLogging.get()) {
+                            continue;
                         }
-                    })
-                    .redirectErrorStream(true)
-                    .start();
-        } else {
-            updateSubFile();
-            log.info("✅ Startup completed. You can view node details at: {}", NODE_FILE_PATH);
-            ProcessBuilder pb = new ProcessBuilder(appFile.getAbsolutePath(), "tunnel", "--no-autoupdate",
-                    "--edge-ip-version", "auto", "--protocol", "http2", "run", "--token", appConfig.getArgoToken());
-            pb.redirectOutput(new File("/dev/null"));
-            pb.redirectError(new File("/dev/null"));
-            log.info("Starting Argo...");
-            Process process = pb.start();
+                        Matcher matcher = QUICK_TUNNEL_HOST_PATTERN.matcher(line);
+                        String lastMatch = null;
+                        while (matcher.find()) {
+                            lastMatch = matcher.group();
+                        }
+                        if (lastMatch != null) {
+                            stopLogging.set(true);
+                            String argoDomain = new URL(lastMatch).getHost();
+                            appConfig.setArgoDomain(argoDomain);
+                            // update application.yml config
+                            updateSpringConfig();
+                            log.info("Spring application.yml config updated successfully");
+                            updateSubFile();
+                            log.info("✅ Startup completed. You can view node details at: {}", NODE_FILE_PATH);
+                        }
+                    }
+                }
+            } else {
+                updateSubFile();
+                log.info("✅ Startup completed. You can view node details at: {}", NODE_FILE_PATH);
+                ProcessBuilder pb = new ProcessBuilder(appFile.getAbsolutePath(), "tunnel", "--no-autoupdate",
+                        "--edge-ip-version", "auto", "--protocol", "http2", "run", "--token", appConfig.getArgoToken());
+                pb.redirectOutput(new File("/dev/null"));
+                pb.redirectError(new File("/dev/null"));
+                log.info("Starting Argo...");
+                process = pb.start();
+            }
             int exitCode = process.waitFor();
-            log.info("Argo process exited with code: {}", exitCode);
+            if (exitCode == 0) {
+                log.info("Argo process exited with code: {}", exitCode);
+                break;
+            } else {
+                log.info("Argo process exited with code: {}, restarting...", exitCode);
+                TimeUnit.SECONDS.sleep(3);
+            }
         }
     }
 

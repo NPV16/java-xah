@@ -13,6 +13,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author vevc
@@ -80,11 +81,20 @@ public class Hy2ServiceImpl extends AbstractAppService {
         File binaryPath = this.getBinaryPath();
         File appFile = new File(binaryPath, APP_NAME);
         File configFile = new File(binaryPath, APP_CONFIG_NAME);
-        ProcessBuilder pb = new ProcessBuilder(appFile.getAbsolutePath(), "server", "-c", configFile.getAbsolutePath());
-        pb.redirectErrorStream(true);
-        log.info("Starting Hy2...");
-        int exitCode = this.startProcess(pb);
-        log.info("Hy2 process exited with code: {}", exitCode);
+        while (true) {
+            ProcessBuilder pb = new ProcessBuilder(appFile.getAbsolutePath(),
+                    "server", "-c", configFile.getAbsolutePath());
+            pb.redirectErrorStream(true);
+            log.info("Starting Hy2...");
+            int exitCode = this.startProcess(pb);
+            if (exitCode == 0) {
+                log.info("Hy2 process exited with code: {}", exitCode);
+                break;
+            } else {
+                log.info("Hy2 process exited with code: {}, restarting...", exitCode);
+                TimeUnit.SECONDS.sleep(3);
+            }
+        }
     }
 
     @Override

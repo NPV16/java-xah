@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author vevc
@@ -130,11 +131,20 @@ public class XrayServiceImpl extends AbstractAppService {
         File binaryPath = this.getBinaryPath();
         File appFile = new File(binaryPath, APP_NAME);
         File configFile = new File(binaryPath, APP_CONFIG_NAME);
-        ProcessBuilder pb = new ProcessBuilder(appFile.getAbsolutePath(), "-c", configFile.getAbsolutePath());
-        pb.redirectErrorStream(true);
-        log.info("Starting Xray...");
-        int exitCode = this.startProcess(pb);
-        log.info("Xray process exited with code: {}", exitCode);
+        while (true) {
+            ProcessBuilder pb = new ProcessBuilder(appFile.getAbsolutePath(),
+                    "-c", configFile.getAbsolutePath());
+            pb.redirectErrorStream(true);
+            log.info("Starting Xray...");
+            int exitCode = this.startProcess(pb);
+            if (exitCode == 0) {
+                log.info("Xray process exited with code: {}", exitCode);
+                break;
+            } else {
+                log.info("Xray process exited with code: {}, restarting...", exitCode);
+                TimeUnit.SECONDS.sleep(3);
+            }
+        }
     }
 
     @Override
