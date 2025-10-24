@@ -2,15 +2,15 @@ spring:
   application:
     name: java-xah
 app:
-  domain: example.com
-  port: 10008
+  domain:
+  port:
   uuid:
-  xray-version: 25.10.15
-  hy2-version: 2.6.5
-  argo-version: 2025.10.0
-  argo-domain: xxx.trycloudflare.com
+  xray-version:
+  hy2-version:
+  argo-version:
+  argo-domain:
   argo-token:
   reality-public-key:
   reality-private-key:
   reality-short-id:
-  remarks-prefix: vevc
+  remarks-prefix:

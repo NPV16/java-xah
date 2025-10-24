@@ -32,6 +32,13 @@ public class AppConfig {
 
     @PostConstruct
     public void init() {
+        domain = StringUtils.defaultIfBlank(domain, "vevc.github.com");
+        port = StringUtils.defaultIfBlank(port, "10008");
         uuid = StringUtils.defaultIfBlank(uuid, UUID.randomUUID().toString());
+        xrayVersion = StringUtils.defaultIfBlank(xrayVersion, "25.10.15");
+        hy2Version = StringUtils.defaultIfBlank(hy2Version, "2.6.5");
+        argoVersion = StringUtils.defaultIfBlank(argoVersion, "2025.10.0");
+        argoDomain = StringUtils.defaultIfBlank(argoDomain, "xxx.trycloudflare.com");
+        remarksPrefix = StringUtils.defaultIfBlank(remarksPrefix, "vevc");
     }
 }
