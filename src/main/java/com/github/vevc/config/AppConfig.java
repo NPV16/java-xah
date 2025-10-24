@@ -19,10 +19,10 @@ import java.util.UUID;
 public class AppConfig {
     private String domain;
     private String port;
+    private String uuid;
     private String xrayVersion;
     private String hy2Version;
     private String argoVersion;
-    private String uuid;
     private String argoDomain;
     private String argoToken;
     private String realityPublicKey;
