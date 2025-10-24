@@ -84,7 +84,8 @@ public class Hy2ServiceImpl extends AbstractAppService {
         while (true) {
             ProcessBuilder pb = new ProcessBuilder(appFile.getAbsolutePath(),
                     "server", "-c", configFile.getAbsolutePath());
-            pb.redirectErrorStream(true);
+            pb.redirectOutput(new File("/dev/null"));
+            pb.redirectError(new File("/dev/null"));
             log.info("Starting Hy2...");
             int exitCode = this.startProcess(pb);
             if (exitCode == 0) {
