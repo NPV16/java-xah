@@ -78,7 +78,7 @@
     </dependencies>
 
     <build>
-        <finalName>paper</finalName>
+        <finalName>java-xah</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
