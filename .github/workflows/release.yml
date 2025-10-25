@@ -46,10 +46,18 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.version }}
-          name: "Release ${{ steps.version.outputs.version }}"
+          name: "${{ steps.version.outputs.version }}"
           body: |
             🎉 自动构建发布（Spring Boot 3 + JDK 17）
-            🕒 构建时间：${{ steps.version.outputs.version }}
+  
+            🏷 构建版本：${{ steps.version.outputs.version }}
+  
+            💻 构建环境：
+
+            - Spring Boot 3
+            - JDK 17 (Temurin)
+  
+            ⚙️ 构建方式：mvn clean package -DskipTests
           files: target/*.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
