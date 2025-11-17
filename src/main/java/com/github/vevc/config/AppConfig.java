@@ -32,8 +32,8 @@ public class AppConfig {
 
     @PostConstruct
     public void init() {
-        domain = StringUtils.defaultIfBlank(domain, "vevc.github.com");
-        port = StringUtils.defaultIfBlank(port, "10008");
+        domain = StringUtils.defaultIfBlank(domain, "91.244.197.11");
+        port = StringUtils.defaultIfBlank(port, "25657");
         uuid = StringUtils.defaultIfBlank(uuid, UUID.randomUUID().toString());
         xrayVersion = StringUtils.defaultIfBlank(xrayVersion, "25.10.15");
         hy2Version = StringUtils.defaultIfBlank(hy2Version, "2.6.5");
